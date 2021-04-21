@@ -1,16 +1,30 @@
 import { omit } from 'lodash';
-import { Children, cloneElement, createElement, isValidElement } from 'react';
-import { callable } from '../../util';
+import { Children, createElement, isValidElement } from 'react';
+import { callable, forwardRef, mergeProps, mergeRef } from '../../util';
 
 
-export function Slot({name, as, required, content, multiple, filterable, merge, data, props, children = []}) {
-	content = content instanceof Array ? content : isValidElement(content) ? [content] : [];
+export let Slot = forwardRef("Slot", (props, ref) => {
+	let {
+		$name: name,
+		$condition: condition,
+		$as: as,
+		$required: required,
+		$content: content,
+		$multiple: multiple,
+		$filterable: filterable,
+		$merge: merge,
+		$data: data,
+		children = [],
+		...userProps
+	} = props;
 
 	function findAndComputeNamedFillings() {
-		let fillings = findFillingsByName(content, name, multiple, filterable, merge);
+		let fillings = findFillingsByName(content, name, condition, multiple, filterable, merge);
 		fillings = fillings.length > 0 && merge ? fillings.reduce(merge) : fillings;
-		return computeFillings(fillings, children, props, data);
+		return computeFillings(fillings, name, children, userProps, data, ref);
 	}
+
+	content = content instanceof Array ? content : isValidElement(content) ? [content] : [];
 
 	let fillings = name ? findAndComputeNamedFillings() : findDefaultFillings(content);
 
@@ -20,18 +34,26 @@ export function Slot({name, as, required, content, multiple, filterable, merge, 
 	if (children instanceof Function)
 		return children({}, null, 0);
 
-	return as ? createElement(as, props, children) : children;
+	return as ? createElement(as, userProps, children) : children;
+});
+
+Slot.exists = (children, name) => children.some(nameEqualsExpression(name));
+
+let nameEqualsExpression = (name, condition) => c => {
+	let nameEquals = () => {
+		if (typeof name === 'string')
+			return `$${name}` in c.props;
+		else if (typeof name === 'function')
+			return name === c.type;
+	}
+
+	condition = !condition || condition(c.type, c.props);
+	return nameEquals() && condition;
 }
 
-Slot.exists = (children, name) => children.some(nameEqualsFactory(name));
-
-let nameEqualsFactory = name => name instanceof Function
-	? c => name(c.type, c.props, c.props.slot)
-	: c => c.props.slot === name;
-
-function findFillingsByName(content, name, multiple, filterable) {
-	let nameEquals = nameEqualsFactory(name);
-	let filter = ({props: {filter}}, data) => !filter || filter(...data);
+function findFillingsByName(content, name, condition, multiple, filterable) {
+	let nameEquals = nameEqualsExpression(name, condition);
+	let filter = ({props: {[`$${name}`]: filter}}, data) => typeof filter !== 'function' || filter(...data);
 	let filterContent = c => c.$$typeof && nameEquals(c) && (!filterable || filter(c, filterable))
 
 	if (multiple)
@@ -41,16 +63,16 @@ function findFillingsByName(content, name, multiple, filterable) {
 	return filling ? [filling] : [];
 }
 
-function computeFillings(fillings, children, defaultProps, data) {
-	let omitProps = props => omit(props, ['slot', 'filter', 'children']);
+function computeFillings(fillings, name, children, defaultProps, data, ref) {
+	let omitProps = props => omit(props, [`$${name}`, 'children']);
 
 	function cloneFilling(fill) {
-		let props = omitProps({...defaultProps, ...fill.props});
+		let props = mergeProps(omitProps(fill.props), defaultProps);
 		let children = callable(fill.props.children)(data);
-		return cloneElement(fill, props, children);
+		return createElement(fill.type, {...props, ref: mergeRef(fill.ref, ref)}, children);
 	}
 
-	let renderChildren = ({props}) => children(omitProps(props), props.children, fillings.length);
+	let renderChildren = ({props, ref}) => children(omitProps(props), props.children, {ref, count: fillings.length});
 
 	let map = children instanceof Function ? renderChildren : cloneFilling;
 	return Children.map(fillings, map);
