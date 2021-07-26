@@ -1,6 +1,7 @@
 import { Slot } from '../core/Slot';
 import { get, useForceUpdate } from '../../util';
 import { useCallback, useMemo } from 'react';
+import { useState } from 'react';
 
 
 export let Column = () => null;
@@ -67,3 +68,118 @@ export function Table({items, children, ...props}) {
 		</table>
 	);
 }
+
+let Table = ({items, trackBy, children}) =>
+	<table>
+		<thead>
+			<tr>
+				<Slot $selector={Column} $multiple $content={children}>
+					{({title}, children) =>  (
+						<Slot $selector={Head} $content={children}>
+							{(props, children, ref) => (
+								<th {...props} ref={ref}>{children || title}</th>
+							)}
+						</Slot>
+					)}
+				</Slot>
+			</tr>
+		</thead>
+		<tbody>
+			{items.map(item => (
+				<tr key={item[trackBy]}>
+					<Slot $selector={Column} $multiple $content={children}>
+						{({field}, children) =>  (
+							<Slot $selector={Cell} $content={children}>
+								{(props, children, ref) =>  (
+									<td {...props} ref={ref}>
+										{children instanceof Function
+											? children(item[field])
+											: children || item[field]}
+									</td>
+								)}
+							</Slot>
+						)}
+					</Slot>
+				</tr>
+			))}
+		</tbody>
+	</table>
+
+
+function Table() {
+
+	<table>
+		<thead>
+			<tr>
+				<th>Nome</th>
+				<th>Preço</th>
+				<th>Quantidade</th>
+				<th>Description</th>
+			</tr>
+		</thead>
+		<tbody>
+			{products.map(product => (
+				<tr>
+					<td>{product.name}</td>
+					<td>{product.price}</td>
+					<td>{product.quantity}</td>
+					<td>{product.description}</td>
+				</tr>
+			))}
+		</tbody>
+	</table>
+
+
+	return (
+		<Table items={products}>
+			<Column title="Nome" field="name"/>
+			<Column field="price">
+				<Head className="price-head">Preço</Head>
+				<Cell>{(value) => `R$ ${value}`}</Cell>
+			</Column>
+			<Column title="Quantidade" field="quantity">
+		<Cell>
+			{(value) => value === 1
+				? `${value} unidades`
+				: `${value} unidade`}
+		</Cell>
+			</Column>
+			<Column title="Descrição" field="description"/>
+		</Table>
+	);
+}
+
+
+function DropdownMenuButton({label, children}) {
+	let [shown, setShown] = useState(false);
+	let toggle = () => setShown(!shown);
+
+	return (
+		<div class="dropdown-menu-button">
+			<Slot
+				$selector="button"
+				$as="button"
+				$content={children}
+				onClick={toggle}
+			>
+				{label || "Opções"}
+			</Slot>
+
+			{shown &&
+				<Slot $selector="menu" $as="ul" $content={children}>
+					<li>Nenhuma opção disponível</li>
+				</Slot>
+			}
+		</div>
+	);
+}
+
+<DropdownMenuButton>
+	<button $button>Opções</button>
+	<ul $menu>
+		<li>Perfil</li>
+		<li>Medias</li>
+		<li>Configurações</li>
+		<li>Sair</li>
+	</ul>
+</DropdownMenuButton>

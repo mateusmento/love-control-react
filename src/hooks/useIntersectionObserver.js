@@ -1,32 +1,33 @@
-import { useMemo } from "react";
+import { useMemo, useRef } from "react";
 
-export function useIntersectionObserver(subscription, deps) {
-  return useMemo(() => {
-    let observer;
+export function useIntersectionObserver(subscription, deps, { offset = 0 } = {}) {
+	let observer = useRef();
 
-    function setupObserver(el) {
-      if (observer)
-        observer.disconnect();
-  
-      observer = new IntersectionObserver((entries) => {
-        if (entries[0].isIntersecting) {
-          subscription();
-          observer.disconnect();
-        }
-      }, { root: el });;
+	return useMemo(() => {
+
+		function setupObserver(el) {
+			if (observer.current)
+				observer.current.disconnect();
+
+				observer.current = new IntersectionObserver((entries, observer) => {
+        if (entries[0].isIntersecting)
+          subscription(observer, entries[0]);
+      }, { root: el });
     }
-  
+
     function rootRef(el) {
       if (!el) return;
       setupObserver(el);
     }
-    
+
     function targetRef(el) {
-      if (!el) return;
-      if (!observer) setupObserver(document);
-      observer.observe(el);
+			if (!el) return;
+      if (!observer.current) setupObserver(document);
+      observer.current.observe(el);
     }
-  
-    return {observer, rootRef, targetRef};
-  }, deps);
+
+		return {observerRef: observer, rootRef, targetRef};
+
+	// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, deps);
 }

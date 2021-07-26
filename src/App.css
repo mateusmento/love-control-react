@@ -1,38 +1,94 @@
 .App {
-  text-align: center;
+  font-family: sans-serif;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+.comments {
+  margin: auto;
+  margin-top: 300px;
+  width: 340px;
+  height: 300px;
+  overflow-y: scroll;
+  border: 1px solid grey;
+  border-top-left-radius: 15px;
+  border-bottom-left-radius: 15px;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
+ul {
+  padding: 0;
+  margin: 0;
 }
 
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
+li {
+  display: block;
+  padding: 10px 15px;
+}
+
+li:not(:last-of-type) {
+  border-bottom: 1px solid grey;
+}
+
+.first {
+	background: greenyellow;
+}
+
+.last {
+  background: #FF0000;
   color: white;
 }
 
-.App-link {
-  color: #61dafb;
+.prepend, .append {
+  display: block;
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.row-details td {
+	padding-left: 100px;
+	background: #660088;
+  text-align: left;
+	/* color: white; */
+}
+
+.table {
+	border-spacing: 0;
+}
+
+.row {
+	color: blue;
+	cursor: pointer;
+}
+
+
+html {
+  font-family: sans-serif;
+}
+
+table {
+  border-collapse: collapse;
+  border: 2px solid rgb(200,200,200);
+  letter-spacing: 1px;
+  font-size: 0.8rem;
+}
+
+td, th {
+  border: 1px solid rgb(190,190,190);
+  padding: 10px 20px;
+}
+
+th {
+  background-color: rgb(235,235,235);
+}
+
+td {
+  text-align: center;
+}
+
+tr:nth-child(even) td {
+  background-color: rgb(250,250,250);
+}
+
+tr:nth-child(odd) td {
+  background-color: rgb(245,245,245);
+}
+
+caption {
+  padding: 10px;
 }

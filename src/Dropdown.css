@@ -1,0 +1,7 @@
+.dropdown {
+	position: relative;
+}
+
+.dropdown__content {
+	position: absolute;
+}
